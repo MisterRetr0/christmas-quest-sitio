@@ -1,0 +1,155 @@
+/* ui.css — A1 v2: UI entintada. Barra superior, dock, componentes globales (.btn .dialog .inv-frame .parchment .seal). Sin píldoras, tarjetas redondeadas ni degradados. */
+
+/* ---------- Barra superior: 6 corazones entintados + sonido ---------- */
+#topbar {
+  position: absolute; left: 0; right: 0; top: 0; z-index: 20; pointer-events: none;
+  display: flex; align-items: center; gap: 8px;
+  padding: calc(var(--safe-t) + 8px) calc(var(--safe-r) + 10px) 8px calc(var(--safe-l) + 10px);
+}
+#topbar > * { pointer-events: auto; }
+#garland { flex: 1; display: flex; align-items: center; justify-content: center; gap: 2px; position: relative; }
+.orn { position: relative; width: 44px; height: 48px; border: 0; background: none; padding: 0; display: grid; place-items: center; }
+.orn svg { width: 28px; height: 26px; overflow: visible; transition: transform .2s steps(3); filter: drop-shadow(0 2px 0 var(--ink)); }
+.orn .heart { fill: var(--paper); fill-opacity: .35; stroke: var(--ink); stroke-width: 2.4; stroke-linejoin: round; }
+.orn .hatch { opacity: 0; }
+.orn[data-visited="true"] .heart { fill: #9C1F2B; fill-opacity: 1; }
+.orn[data-visited="true"] .hatch { opacity: 1; }
+.orn[aria-current="step"] .heart { fill: #E07B1A; fill-opacity: 1; }
+.orn[aria-current="step"] svg { transform: scale(1.25); }
+.orn[aria-disabled="true"] { cursor: default; }
+
+#sound-btn {
+  width: 48px; height: 48px; border-radius: 4px; border: var(--ink-w) solid var(--ink); display: grid; place-items: center;
+  background: var(--paper); color: var(--ink); flex: none; touch-action: none; user-select: none; box-shadow: 0 3px 0 var(--ink);
+}
+#sound-btn:active { transform: translateY(3px); box-shadow: none; }
+#sound-btn .mute-x { display: none; }
+#sound-btn[data-muted="true"] .mute-x { display: inline; }
+#sound-btn[data-muted="true"] .waves { display: none; }
+
+/* contador de Pandoras: etiqueta de papel con número pixelado */
+#hud-pandoras {
+  position: absolute; left: calc(var(--safe-l) + 12px); top: calc(var(--safe-t) + 62px); z-index: 20;
+  display: flex; align-items: center; gap: 8px; padding: 4px 10px 4px 6px; border-radius: 4px;
+  background: var(--paper); color: var(--ink); border: var(--ink-w) solid var(--ink); box-shadow: 0 3px 0 var(--ink);
+  font-family: var(--font-pixel); font-size: 13px;
+}
+#hud-pandoras[hidden] { display: none; }
+#hud-pandoras.bounce { animation: bounce .24s steps(3); }
+@keyframes bounce { 0%{transform:translateY(0)} 50%{transform:translateY(-10px)} 100%{transform:translateY(0)} }
+
+#vol-pop {
+  position: absolute; right: calc(var(--safe-r) + 10px); top: calc(var(--safe-t) + 62px); z-index: 30;
+  background: var(--paper); color: var(--ink); border: var(--ink-w) solid var(--ink); border-radius: 4px; padding: 10px 14px;
+  box-shadow: 0 5px 0 var(--ink); display: flex; flex-direction: column; gap: 4px; width: 190px;
+}
+#vol-pop[hidden] { display: none; }
+#vol-pop label { font-weight: 800; font-size: 15px; font-family: var(--font-ui); }
+#vol-range { width: 100%; height: 48px; accent-color: #9C1F2B; }
+
+/* ---------- Dock inferior ---------- */
+#dock {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; pointer-events: none;
+  display: flex; flex-direction: column; align-items: stretch; gap: 8px;
+  padding: 0 calc(var(--safe-r) + 14px) calc(var(--safe-b) + 14px) calc(var(--safe-l) + 14px);
+}
+#dock > * { pointer-events: auto; }
+
+/* ---------- Caja de diálogo RPG (.dialog): fondo tinta, doble borde papel, triángulo parpadeante. Las frases aparecen con fundido (nunca letra a letra). ---------- */
+.dialog {
+  position: relative; background: #14101F; color: var(--paper); border: 4px double var(--paper); border-radius: 0;
+  outline: var(--ink-w) solid var(--ink); outline-offset: 0; box-shadow: 0 5px 0 var(--ink);
+  padding: 14px 30px 14px 18px; font-family: var(--font-body); font-size: 20px; line-height: 1.45;
+  min-height: 3.6em; display: flex; flex-wrap: wrap; align-content: center; gap: 0 .3em;
+}
+.dialog::after { content: ''; position: absolute; right: 10px; bottom: 9px; width: 0; height: 0; border: 7px solid transparent; border-top: 9px solid var(--paper); border-bottom: 0; animation: dlgBlink 1s steps(2) infinite; }
+@keyframes dlgBlink { 50% { opacity: 0; } }
+/* Placa de nombre (api.setSpeaker): borde de tinta, Pirata One */
+.dialog[data-speaker]::before {
+  content: attr(data-speaker); position: absolute; left: 14px; top: -19px; z-index: 1;
+  padding: 2px 16px 1px; background: var(--paper); color: var(--ink); border: var(--ink-w) solid var(--ink);
+  border-radius: 2px; box-shadow: 0 3px 0 var(--ink); font-family: var(--font-title-gothic); font-size: 21px; line-height: 1.25; letter-spacing: .02em;
+}
+.dialog, .dialog .sent { color: var(--paper); }   /* texto claro sobre caja oscura, siempre */
+.dialog:empty { display: none; }
+#narration:empty { display: none; }
+.sent { opacity: 0; animation: sentIn 250ms ease-out forwards; }
+.no-anim .sent { opacity: 1; animation: none; }
+@keyframes sentIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+
+/* ---------- Botones (.btn): radio 4, borde de tinta 3 px, sombra dura 0 5px 0, se hunde al pulsar. .btn--ghost = papel. ---------- */
+.btn {
+  display: block; width: 70%; min-width: 220px; min-height: 56px; margin: 0 auto; padding: 8px 16px;
+  border: var(--ink-w) solid var(--ink); border-radius: 4px; background: #9C1F2B; color: var(--paper);
+  font-family: var(--font-ui); font-weight: 800; font-size: 18px; letter-spacing: .04em; line-height: 1.15; text-align: center;
+  box-shadow: 0 5px 0 var(--ink); transition: transform .06s steps(2), box-shadow .06s steps(2);
+}
+.btn:active { transform: translateY(5px); box-shadow: 0 0 0 var(--ink); }
+.btn--ghost, .btn.btn--ghost { background: var(--paper); color: var(--ink); }
+.btn[hidden] { display: none; }
+.btn:disabled { opacity: .5; cursor: default; }
+#next-btn { margin-bottom: 5px; }
+
+#back-btn {
+  align-self: flex-start; min-height: 44px; min-width: 64px; padding: 0 14px; margin: 0 0 0 -4px;
+  border: 2px solid var(--ink); border-radius: 4px; background: var(--paper); color: var(--ink);
+  font-family: var(--font-ui); font-weight: 800; font-size: 13px; opacity: .85; box-shadow: 0 3px 0 var(--ink);
+}
+#back-btn:active { transform: translateY(3px); box-shadow: none; }
+#back-btn[hidden] { display: block; visibility: hidden; }
+
+#skip-btn {
+  align-self: flex-end; min-height: 48px; padding: 0 18px; border: var(--ink-w) solid var(--ink); border-radius: 4px;
+  background: var(--paper); color: var(--ink); font-family: var(--font-ui); font-weight: 800; font-size: 16px; box-shadow: 0 4px 0 var(--ink);
+}
+#skip-btn:active { transform: translateY(4px); box-shadow: none; }
+#skip-btn[hidden] { display: none; }
+
+/* ---------- Marco de inventario (.inv-frame): casilla cuadrada, borde dorado 4 px, esquinas remachadas ---------- */
+.inv-frame {
+  position: relative; aspect-ratio: 1; background-color: #14101F; border: 4px solid #C9A227; border-radius: 0;
+  outline: var(--ink-w) solid var(--ink); box-shadow: inset 0 0 0 3px var(--ink), 0 5px 0 var(--ink); padding: 10px; display: grid; place-items: center;
+  background-image:
+    radial-gradient(circle at 7px 7px, #E9D9A0 0 2.5px, var(--ink) 2.5px 3.5px, transparent 4px),
+    radial-gradient(circle at calc(100% - 7px) 7px, #E9D9A0 0 2.5px, var(--ink) 2.5px 3.5px, transparent 4px),
+    radial-gradient(circle at 7px calc(100% - 7px), #E9D9A0 0 2.5px, var(--ink) 2.5px 3.5px, transparent 4px),
+    radial-gradient(circle at calc(100% - 7px) calc(100% - 7px), #E9D9A0 0 2.5px, var(--ink) 2.5px 3.5px, transparent 4px);
+}
+.inv-frame img, .inv-frame canvas { max-width: 100%; max-height: 100%; object-fit: contain; filter: contrast(1.1) saturate(.8) drop-shadow(1px 0 0 var(--ink)) drop-shadow(-1px 0 0 var(--ink)) drop-shadow(0 1px 0 var(--ink)) drop-shadow(0 -1px 0 var(--ink)); }
+
+/* ---------- Pergamino de borde rasgado (.parchment) y sello de cera (.seal) ---------- */
+.parchment { --torn: polygon(0.0% 1.4%,4.5% 1.6%,9.1% 1.7%,13.6% 2.1%,18.2% 1.6%,22.7% 2.0%,27.3% 0.1%,31.8% 1.0%,36.4% 2.1%,40.9% 1.4%,45.5% 2.0%,50.0% 0.2%,54.5% 1.0%,59.1% 0.5%,63.6% 1.2%,68.2% 1.3%,72.7% 0.0%,77.3% 0.5%,81.8% 0.6%,86.4% 2.0%,90.9% 1.7%,95.5% 0.4%,100.0% 1.8%,99.8% 9.1%,99.1% 18.2%,99.8% 27.3%,100.0% 36.4%,98.8% 45.5%,99.7% 54.5%,99.7% 63.6%,98.6% 72.7%,98.8% 81.8%,99.6% 90.9%,100.0% 97.9%,95.5% 98.8%,90.9% 98.5%,86.4% 99.5%,81.8% 97.9%,77.3% 98.5%,72.7% 97.9%,68.2% 98.0%,63.6% 99.3%,59.1% 99.2%,54.5% 99.6%,50.0% 99.7%,45.5% 99.9%,40.9% 99.3%,36.4% 98.7%,31.8% 100.0%,27.3% 98.5%,22.7% 99.3%,18.2% 99.3%,13.6% 98.2%,9.1% 98.9%,4.5% 99.3%,0.0% 98.9%,1.0% 90.9%,0.1% 81.8%,1.4% 72.7%,0.0% 63.6%,1.0% 54.5%,1.2% 45.5%,0.0% 36.4%,1.1% 27.3%,0.5% 18.2%,0.8% 9.1%); position: relative; isolation: isolate; color: var(--ink); font-family: var(--font-body); }
+.parchment::before { content: ''; position: absolute; inset: -3px; z-index: -2; background: var(--ink); clip-path: var(--torn); }
+.parchment::after { content: ''; position: absolute; inset: 0; z-index: -1; background-color: var(--paper); clip-path: var(--torn);
+  background-image: radial-gradient(rgba(122,82,48,.16) 1px, transparent 1.4px), radial-gradient(rgba(122,82,48,.1) 1px, transparent 1.4px); background-size: 9px 9px, 13px 13px; background-position: 0 0, 4px 6px; }
+.seal {
+  position: relative; display: inline-block; width: 56px; height: 56px; background: #9C1F2B; border: var(--ink-w) solid var(--ink);
+  border-radius: 46% 54% 50% 50% / 52% 46% 54% 48%; box-shadow: 0 3px 0 var(--ink), inset 0 0 0 5px rgba(27,20,32,.18), inset 0 0 0 7px rgba(232,226,208,.28);
+}
+.seal::after { content: ''; position: absolute; inset: 24%; background: rgba(232,226,208,.88); clip-path: polygon(50% 0, 61% 33%, 96% 35%, 68% 56%, 79% 92%, 50% 70%, 21% 92%, 32% 56%, 4% 35%, 39% 33%); }
+
+/* ---------- Diálogo de papel (¿Seguimos donde quedamos?) ---------- */
+#modal-root:empty { display: none; }
+#modal-root { position: absolute; inset: 0; z-index: 40; display: grid; place-items: center; background: rgba(20,16,31,.78); padding: 24px; }
+.paper-dialog { color: var(--ink); padding: 40px 24px 26px; width: 100%; max-width: 320px; text-align: center; animation: dlgIn 320ms cubic-bezier(.2,1.3,.4,1) both; filter: drop-shadow(0 6px 0 rgba(27,20,32,.55)); }
+.paper-dialog .seal { position: absolute; left: 50%; top: -26px; margin-left: -28px; transform: rotate(-8deg); }
+.paper-dialog h2 { margin: 0 0 6px; font-family: var(--font-title-gothic); font-weight: 400; font-size: 30px; line-height: 1.1; color: #9C1F2B; }
+.paper-dialog p { margin: 0 0 20px; font-family: var(--font-body); font-style: italic; font-size: 19px; line-height: 1.3; color: #4a3b2a; }
+.paper-dialog .btns { display: flex; flex-direction: column; gap: 14px; }
+@keyframes dlgIn { from { opacity: 0; transform: translateY(18px) rotate(-2deg) scale(.92); } to { opacity: 1; transform: none; } }
+.paper-dialog .btn { width: 100%; }
+.btn.primary { background: #9C1F2B; color: var(--paper); }
+
+#sheet-shadow { position: absolute; inset: 0; z-index: 4; pointer-events: none; background: rgba(27,20,32,0); }
+#sheet-shadow.on { animation: sheetShade 600ms ease-in-out; }
+@keyframes sheetShade { 50% { background: rgba(27,20,32,.4); } }
+
+/* chispas (solo Oro, Baya, Ámbar): cuadraditos de tinta en vez de círculos */
+.spark { position: absolute; width: 8px; height: 8px; border: 1.5px solid var(--ink); animation: spark .8s steps(6) forwards; }
+@keyframes spark { to { transform: translate(var(--dx), var(--dy)) scale(.2) rotate(90deg); opacity: 0; } }
+
+/* ---------- FX de plataformas (api.fx.coinArc / blockBounce / whiteFlash) ---------- */
+.fx-coin { position: absolute; z-index: 30; display: flex; align-items: center; gap: 4px; pointer-events: none; will-change: transform; }
+.fx-coin i { display: block; width: 22px; height: 22px; border: 2px solid var(--ink); border-radius: 50%; background: #E8C25A; box-shadow: inset 0 0 0 3px #C9A227; }
+.fx-coin b { font-family: var(--font-pixel); font-weight: 400; font-size: 10px; color: var(--paper); text-shadow: 2px 0 0 var(--ink), -2px 0 0 var(--ink), 0 2px 0 var(--ink), 0 -2px 0 var(--ink); }
+.fx-flash { position: absolute; inset: 0; z-index: 45; background: #fff; opacity: 0; pointer-events: none; }

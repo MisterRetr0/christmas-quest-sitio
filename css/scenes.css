@@ -1,0 +1,641 @@
+/* scenes.css — páginas de capítulo, transición "pasar la página", escenas placeholder */
+.page {
+  position: absolute; inset: 0; overflow: hidden; background: var(--tint, var(--papel));
+  transform-origin: left center; backface-visibility: hidden; will-change: transform, opacity;
+}
+.page.turn-out  { z-index: 3; animation: turnOut 600ms cubic-bezier(.5,0,.3,1) forwards; }
+.page.turn-in   { z-index: 3; animation: turnIn 600ms cubic-bezier(.5,0,.3,1) both; }
+.page.enter     { animation: fadeIn 400ms ease-out both; }
+.page.fade-out  { z-index: 3; animation: fadeOut 300ms ease forwards; }
+.page.fade-in   { animation: fadeIn 300ms ease both; }
+@keyframes turnOut { 0%{transform:rotateY(0);opacity:1} 80%{opacity:1} 100%{transform:rotateY(-105deg);opacity:0} }
+@keyframes turnIn  { 0%{transform:rotateY(-105deg);opacity:0} 20%{opacity:1} 100%{transform:rotateY(0);opacity:1} }
+@keyframes fadeIn  { from{opacity:0} to{opacity:1} }
+@keyframes fadeOut { from{opacity:1} to{opacity:0} }
+
+/* capas de papel con parallax táctil */
+.bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.bg .layer {
+  transform: translate(calc(var(--px) * var(--d, 0) * 1px), calc(var(--py) * var(--d, 0) * .5px));
+  transition: transform .25s ease-out;
+}
+
+.scene-body {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+  padding: calc(var(--safe-t) + 100px) 24px 300px; text-align: center; pointer-events: none;
+}
+.scene-body > * { pointer-events: auto; }
+.ch-kicker { font-weight: 800; font-size: 14px; letter-spacing: .14em; text-transform: uppercase; color: var(--noche); opacity: .75; margin: 0; }
+.ch-title { font-family: var(--font-letter); font-weight: 600; font-size: 30px; line-height: 1.15; margin: 4px 0 0; color: var(--noche); }
+
+/* silueta donde irá el PNG del personaje */
+.char-slot {
+  margin-top: auto; margin-bottom: 8px; width: 46%; aspect-ratio: 3 / 4; max-height: 34dvh;
+  border: 3px dashed rgba(31,42,68,.5); border-radius: 46% 46% 18% 18%;
+  background: rgba(31,42,68,.12); display: grid; place-items: center;
+  color: var(--noche); font-weight: 800; font-size: 14px;
+}
+.placeholder-btn {
+  margin-top: 12px; min-height: 48px; padding: 0 18px; border-radius: 12px; border: 2px dashed var(--noche);
+  background: rgba(239,227,204,.85); font-weight: 800;
+}
+
+/* =====================================================================
+   CAPÍTULO 1 — LA PUERTA (c1-door.js) · A1 v2: tinta, colores planos, sin degradados
+   ===================================================================== */
+.c1 { background: #14101F; }
+/* Lienzo 9:16 centrado: coincide con el "slice" del SVG, así los <div> se alinean en porcentajes */
+.c1-art { position: absolute; left: 50%; top: 0; height: 100%; aspect-ratio: 9 / 16; transform: translateX(-50%); perspective: 900px; }
+.c1-art > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.c1-art .layer { transform: translate(calc(var(--px) * var(--d, 0) * 1px), calc(var(--py) * var(--d, 0) * .5px)); transition: transform .25s ease-out; }
+/* vano: x156..216, y270..440 de 360x640 */
+.c1-doorway { position: absolute; left: 37.8%; top: 47.5%; width: 13.3%; height: 21.25%; transform-style: preserve-3d; }
+.c1-interior, .c1-leaf { position: absolute; inset: 0; border-radius: 50% 50% 0 0 / 28% 28% 0 0; }
+.c1-interior { background: #E07B1A; opacity: .55; transition: opacity 1s steps(5); overflow: hidden; }
+.c1-interior i { position: absolute; left: 18%; right: 18%; top: 22%; bottom: 0; background: #E8E2D0; border-radius: 50% 50% 0 0 / 22% 22% 0 0; opacity: .9; }
+.c1-sil { position: absolute; left: 30%; width: 40%; bottom: 0; opacity: 0; }
+.c1.is-opening .c1-sil { animation: c1Sil .3s steps(3) .9s forwards; }
+.c1.is-open-instant .c1-sil { opacity: 1; }
+@keyframes c1Sil { to { opacity: 1; } }
+.c1-leaf { transform-origin: 0 50%; transform-style: preserve-3d; }
+.c1-leaf svg { width: 100%; height: 100%; display: block; overflow: visible; }
+/* luz naranja que se derrama por los escalones (plano plano, borde duro) */
+.c1-beam { position: absolute; left: 29.4%; width: 30%; top: 70%; height: 22%; opacity: 0; pointer-events: none; background: #E07B1A;
+  clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%); transition: opacity .6s steps(4) .3s; }
+.c1-flood { /* círculo plano de luz con borde de tinta; crece hasta cubrir la escena */
+  position: absolute; left: 44.4%; top: 58%; width: 300%; aspect-ratio: 1; pointer-events: none; opacity: 0; border-radius: 50%;
+  transform: translate(-50%, -50%) scale(.04); background: #E07B1A; box-shadow: inset 0 0 0 clamp(8px, 3%, 40px) #E8E2D0;
+}
+.c1.is-opening .c1-leaf { animation: c1Swing 1.45s cubic-bezier(.45,.05,.3,1) forwards; }
+.c1.is-opening .c1-interior { opacity: 1; }
+.c1.is-opening .c1-beam { opacity: 1; }
+.c1.is-flooding .c1-flood { animation: c1Flood .8s cubic-bezier(.4,0,.3,1) forwards; }
+@keyframes c1Swing { 0% { transform: rotateY(0); } 18% { transform: rotateY(7deg); } 32% { transform: rotateY(5deg); } 100% { transform: rotateY(74deg); } }
+@keyframes c1Flood { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.04); } 15% { opacity: 1; } 100% { opacity: 1; transform: translate(-50%, -50%) scale(2.3); } }
+.c1.is-open-instant .c1-leaf { transform: rotateY(74deg); }
+.c1.is-open-instant .c1-interior, .c1.is-open-instant .c1-beam { opacity: 1; transition: opacity .5s; }
+.c1.flood-fade .c1-leaf { transform: none; }
+.c1.flood-fade .c1-flood { transform: translate(-50%, -50%); animation: none; opacity: 1; transition: opacity .6s ease-in .15s; box-shadow: none; }
+/* faroles: el derecho parpadea a saltos (steps), el izquierdo respira */
+.c1 .lantern .glow { animation: c1Breathe 3s steps(2) infinite; }
+.c1 .lantern.flick .glow { animation: c1Flicker 2.4s steps(1) infinite; }
+.c1 .lantern.flick .flame { animation: c1FlameJit 2.4s steps(1) infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes c1Breathe { 50% { opacity: .5; } }
+@keyframes c1Flicker { 0%,100% { opacity: 1; } 12% { opacity: .3; } 20% { opacity: .9; } 44% { opacity: .5; } 60% { opacity: 1; } 78% { opacity: .4; } }
+@keyframes c1FlameJit { 0%,100% { transform: scaleY(1); } 12% { transform: scaleY(.6); } 20% { transform: scaleY(1.1); } 44% { transform: scaleY(.8); } 78% { transform: scaleY(.65); } }
+.c1 .smoke { animation: c1Smoke 5s steps(10) infinite; transform-origin: 272px 34px; }
+@keyframes c1Smoke { 50% { transform: translateY(-5px) rotate(3deg); opacity: .7; } }
+/* ===== fin capítulo 1 ===== */
+
+/* =====================================================================
+   CAPÍTULO 2 — LA CARTA (c2-letter.js) · A1 v2: pergamino rasgado, sello de cera, capitular, vela
+   ===================================================================== */
+.c2 { container-type: size; background: #3A2A52; }
+.c2 .candle { animation: c2Flame 1.8s steps(1) infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes c2Flame { 0%,100% { transform: scale(1,1); } 25% { transform: scale(.92,1.08); } 50% { transform: scale(1.05,.94); } 75% { transform: scale(.95,1.04); } }
+.c2 .lightcone { animation: c2Light 2.4s steps(1) infinite; }
+@keyframes c2Light { 0%,100% { opacity: .16; } 40% { opacity: .22; } 70% { opacity: .12; } }
+
+/* --- carta: pergamino de borde rasgado que se desenrolla --- */
+.c2-letter { --sh: clamp(236px, 37cqh, 300px); position: absolute; left: 50%; top: calc(var(--safe-t) + 80px); width: min(331px, calc(100% - 40px)); height: var(--sh); transform: translateX(-50%); z-index: 3;
+  padding: 26px 26px 34px; clip-path: inset(0 0 100% 0); animation: c2Unroll 1.1s cubic-bezier(.3,.7,.2,1) .4s forwards; display: flex; flex-direction: column; justify-content: center; }
+@keyframes c2Unroll { to { clip-path: inset(-8px -8px -30px -8px); } }
+.c2-text { position: relative; z-index: 1; margin: 0; font-family: var(--font-body); font-size: 20px; line-height: 1.4; color: var(--ink); text-align: left; opacity: 0; }
+.c2-text.in { animation: c2TextIn .7s ease-out forwards; }
+@keyframes c2TextIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.c2 .dropcap { float: left; font-family: var(--font-title-gothic); font-size: 64px; line-height: .78; padding: 4px 8px 0 0; color: #9C1F2B; -webkit-text-stroke: 1.5px var(--ink); paint-order: stroke fill; }
+.c2.c2-dlg .c2-letter { opacity: 0; pointer-events: none; }
+.c2-letter { transition: opacity .35s; }
+.c2-seal { position: absolute; right: 16px; bottom: -22px; transform: rotate(-8deg) scale(0); animation: c2SealIn .35s steps(4) 1.7s forwards; }
+@keyframes c2SealIn { to { transform: rotate(-8deg) scale(1); } }
+
+/* --- gag: mamá tachada con dos trazos finos Baya --- */
+.c2 .mama { position: relative; display: inline-block; }
+.c2 .scribble { position: absolute; left: -7%; right: -7%; top: -8%; bottom: -12%; width: 114%; height: 120%; overflow: visible; }
+.c2 .scribble path { fill: none; stroke: #9C1F2B; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.c2.gag-scribble .scribble path { animation: c2Scribble .4s ease-out forwards; }
+@keyframes c2Scribble { to { stroke-dashoffset: 0; } }
+.c2-stamp {
+  display: none; position: relative; z-index: 2; align-self: center; margin-top: 14px; text-align: center; opacity: 0;
+  font-family: var(--font-title-gothic); font-size: 34px; line-height: 1.02; letter-spacing: .02em; color: #9C1F2B;
+  border: 4px double #9C1F2B; padding: 4px 14px 6px; transform: rotate(-6deg); mix-blend-mode: multiply;
+}
+.c2.c2-beat2 .c2-stamp { display: block; }
+.c2.gag-stamp .c2-stamp { animation: c2Stamp .3s steps(4) forwards; }
+@keyframes c2Stamp { 0% { opacity: 0; transform: rotate(-14deg) scale(2.4); } 100% { opacity: 1; transform: rotate(-6deg) scale(1); } }
+
+/* --- personaje (.chibi): entra desde abajo, respira y salta --- */
+.c2-char { position: absolute; left: 50%; bottom: calc(var(--safe-b) + 128px); transform: translateX(-50%); z-index: 4; pointer-events: none;
+  height: clamp(150px, min(38cqh, calc(100cqh - 80px - 300px - 150px)), 320px); aspect-ratio: 3 / 5; }
+.c2-slide { height: 100%; animation: c2Slide .9s cubic-bezier(.2,.9,.3,1.1) .1s both; }
+.c2-jump { height: 100%; transform-origin: 50% 100%; }
+.c2-bob { position: relative; height: 100%; animation: c2Bob 3s ease-in-out infinite; transform-origin: 50% 100%; }
+.c2-char img, .c2-char .c2-fallback { display: block; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; }
+.c2-char .chibi-shadow { bottom: -2%; }
+@keyframes c2Slide { from { transform: translateY(120%); } to { transform: none; } }
+@keyframes c2Bob { 50% { transform: translateY(-5px) scaleY(1.015); } }
+.c2.gag-jump .c2-jump { animation: c2Jump .75s cubic-bezier(.3,.8,.4,1); }
+@keyframes c2Jump { 0% { transform: none; } 18% { transform: scaleY(.92) scaleX(1.06); } 45% { transform: translateY(-62px) scale(1.08); } 70% { transform: translateY(-62px) scale(1.08); } 100% { transform: none; } }
+@container (max-height: 700px) { .c2-text { font-size: 17px; } .c2 .dropcap { font-size: 52px; } .c2-stamp { font-size: 28px; } .c2-letter { padding: 20px 22px 28px; } }
+@media (prefers-reduced-motion: reduce) { .c2-letter { clip-path: none; } .c2-text { opacity: 1; } .c2-seal { transform: rotate(-8deg) scale(1); } }
+/* ===== fin capítulo 2 ===== */
+
+/* =====================================================================
+   CAPÍTULO 3 — EL EXPEDIENTE DEL AVENTURERO (c3-dossier.js)
+   ===================================================================== */
+.c3 { container-type: size; background: #1F3B2D; }
+/* Lienzo 9:16 centrado (coincide con el "slice" del SVG; los regalos se colocan en %) */
+.c3-art { position: absolute; left: 50%; top: 0; height: 100%; aspect-ratio: 9 / 16; transform: translateX(-50%); }
+/* los cofres van en su propia capa, POR ENCIMA del sprite VN (z 2): así el cofre 1 no cae detrás del aventurero */
+.c3-gifts { z-index: 3; pointer-events: none; } .c3-gifts .c3-gift { pointer-events: auto; }
+.c3-art > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.c3-art .layer { transform: translate(calc(var(--px) * var(--d, 0) * 1px), calc(var(--py) * var(--d, 0) * .5px)); transition: transform .25s ease-out; }
+.c3 .shaft { animation: c3Ray 7s steps(6, end) infinite; } .c3 .shaft.s2 { animation-delay: -2.5s; } .c3 .shaft.s3 { animation-delay: -4.5s; }
+@keyframes c3Ray { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+.c3 .mote { animation: c3Mote 9s ease-in-out infinite; animation-delay: calc(var(--i) * -.7s); transform-box: fill-box; opacity: .8; }
+@keyframes c3Mote { 0%,100% { transform: translate(0,0); opacity: .2; } 35% { transform: translate(10px,-18px); opacity: .95; } 70% { transform: translate(-8px,-34px); opacity: .5; } }
+
+/* --- regalos colgando de la rama --- */
+.c3-gift { position: absolute; left: var(--x); top: var(--top); width: 84px; margin-left: -42px; height: calc(var(--len) + 80px); padding: 0; border: 0; background: none; z-index: 3; transition: opacity .3s; }
+.c3-gift .sway { position: absolute; inset: 0; transform-origin: 50% 0; animation: c3Sway 4.2s ease-in-out infinite; }
+.c3-gift:nth-of-type(2) .sway { animation-delay: -1.4s; animation-duration: 4.8s; } .c3-gift:nth-of-type(3) .sway { animation-delay: -2.6s; }
+@keyframes c3Sway { 0%,100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+.c3-gift .rope { position: absolute; left: 50%; top: -2px; width: 7px; height: calc(var(--len) + 2px); margin-left: -3.5px; background: #4F7F3A; border: 2px solid #1B1420; border-radius: 4px; transition: opacity .15s; }
+.c3-gift .rope::before, .c3-gift .rope::after { content: ''; position: absolute; width: 11px; height: 6px; background: #A9C46C; border: 1.5px solid #1B1420; border-radius: 60% 40% 60% 40%; }
+.c3-gift .rope::before { left: 4px; top: 30%; transform: rotate(-24deg); } .c3-gift .rope::after { right: 4px; top: 62%; transform: rotate(24deg) scaleX(-1); }
+.c3-gift .holder { position: absolute; left: 4px; top: var(--len); width: 76px; height: 76px; }
+.c3-gift .holder svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.c3-gift .lid { transform-box: fill-box; transform-origin: 20% 100%; }
+.c3-gift .burst { opacity: 0; transform-box: fill-box; transform-origin: center; }
+/* halo ámbar que pulsa cada 1,2 s en el siguiente regalo */
+.c3-gift .halo { position: absolute; left: 50%; top: 50%; width: 104px; height: 104px; margin: -52px 0 0 -52px; border-radius: 50%; opacity: 0; pointer-events: none; border: 3px dashed #C9A227; }
+.c3-gift.next .halo { animation: c3Halo 1.2s steps(4, end) infinite; }
+@keyframes c3Halo { 0%,100% { opacity: .35; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.15); } }
+.c3-gift.dim { opacity: .5; }
+.c3-gift:not(.next) { cursor: default; }
+/* se suelta y cae con rebote (la caída llega al 54 % de la altura) */
+.c3-gift.cut { pointer-events: none; }
+.c3-gift.cut .sway { animation: none; }
+.c3-gift.cut .rope { opacity: 0; }
+.c3-gift.cut .halo { display: none; }
+.c3-gift .holder { --drop: calc(54cqh - var(--top) - var(--len)); }
+.c3-gift.cut .holder { animation: c3Drop .9s cubic-bezier(.35,0,.6,1) forwards; }
+@keyframes c3Drop { 0% { transform: translateY(0) rotate(0); } 55% { transform: translateY(var(--drop)) rotate(6deg); } 70% { transform: translateY(calc(var(--drop) - 26px)) rotate(-3deg); } 85% { transform: translateY(var(--drop)) rotate(1deg); } 93% { transform: translateY(calc(var(--drop) - 6px)); } 100% { transform: translateY(var(--drop)); } }
+.c3-gift.open .holder { transform: translateY(var(--drop)); animation: none; }
+.c3-gift.open .lid { animation: c3Lid .6s ease-out forwards; }
+.c3-gift.open .burst { animation: c3Burst .8s ease-out forwards; }
+@keyframes c3Lid { to { transform: translate(14px,-44px) rotate(24deg); opacity: 0; } }
+@keyframes c3Burst { 0% { opacity: 0; transform: scale(.2); } 30% { opacity: 1; } 100% { opacity: 0; transform: scale(1.8); } }
+.c3-gift.gone { opacity: 0; }
+.c3-gift.gone .holder { transform: translateY(var(--drop)) scale(.6); transition: transform .35s; }
+
+/* --- tarjeta del expediente --- */
+.c3 .c3-card { position: absolute; left: 50%; top: 35cqh; width: min(312px, calc(100% - 40px)); margin: 0 0 0 calc(min(312px, 100% - 40px) / -2); z-index: 8; border: 0; background: none; padding: 30px 22px 18px; text-align: left; display: flex; flex-direction: column; gap: 6px; }
+.c3-card[hidden] { display: none; }
+.c3-card.in { animation: c3CardIn .5s cubic-bezier(.2,1.4,.4,1) both; } .c3-card.out { animation: c3CardOut .25s ease-in forwards; }
+@keyframes c3CardIn { from { opacity: 0; transform: translateY(24px) scale(.7) rotate(-4deg); } to { opacity: 1; transform: none; } }
+@keyframes c3CardOut { to { opacity: 0; transform: translateY(-14px) scale(.9); } }
+.c3-num { position: absolute; left: 28px; top: 8px; font: 800 11px/1 var(--font-ui); letter-spacing: .1em; text-transform: uppercase; color: #6b5a3a; }
+.c3-ttl { font-family: var(--font-title-epic, var(--font-letter)); font-weight: 700; font-size: 20px; line-height: 1.2; }
+.c3-line { font-family: var(--font-body, var(--font-letter)); font-size: 19px; line-height: 1.35; }
+.c3-hint { align-self: flex-end; font: 800 13px var(--font-ui); color: #9C1F2B; letter-spacing: .04em; }
+
+/* --- personaje sobre el camino --- */
+.c3-char { position: absolute; left: 27%; bottom: 31%; transform: translateX(-50%); height: min(29cqh, 260px); aspect-ratio: 3 / 5; z-index: 2; pointer-events: none; transition: opacity .5s; }
+.c3-char .chibi-shadow { bottom: -3px; width: 78%; height: 6%; }
+.c3-bob { height: 100%; animation: c3Bob 3.2s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes c3Bob { 50% { transform: translateY(-4px) scaleY(1.012); } }
+.c3-char img, .c3-char .c3-fallback { display: block; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; }
+.c3.c3-is-final .c3-char { opacity: 0; }
+.c3.c3-is-final .c3-gift, .c3.c3-is-final .c3-card { visibility: hidden; }
+
+/* --- beat final: expediente con sello + mapa --- */
+.c3-final { position: absolute; inset: 0; z-index: 7; display: none; flex-direction: column; align-items: center; gap: 18px; padding: calc(var(--safe-t) + 84px) 0 0; pointer-events: none; }
+.c3.c3-is-final .c3-final { display: flex; }
+.c3 .c3-dossier { position: relative; width: min(312px, calc(100% - 44px)); padding: 30px 24px 22px; text-align: left; animation: c3CardIn .5s cubic-bezier(.2,1.4,.4,1) both; }
+.c3-kicker { font: 800 12px/1 var(--font-ui); letter-spacing: .16em; text-transform: uppercase; color: #6b5a3a; }
+.c3-dossier h2 { margin: 4px 0 10px; font-family: var(--font-title-epic, var(--font-letter)); font-weight: 700; font-size: 22px; line-height: 1.15; }
+.c3-dossier ul { list-style: none; margin: 0 0 14px; padding: 0; font-family: var(--font-body, var(--font-letter)); font-size: 19px; line-height: 1.6; }
+.c3-dossier li { display: flex; align-items: center; gap: 8px; }
+.c3-approved { display: flex; flex-direction: column; gap: 2px; padding: 8px 12px 10px; border: 3px solid #9C1F2B; border-radius: 3px; color: #9C1F2B; transform: rotate(-3deg); opacity: 0; mix-blend-mode: multiply; }
+.c3-approved .lbl { font: 800 12px var(--font-ui); letter-spacing: .12em; text-transform: uppercase; }
+.c3-approved .who { font: 700 19px/1.25 var(--font-title-epic, var(--font-ui)); }
+.c3.f-stamp .c3-approved { animation: c3Stamp .45s cubic-bezier(.2,1.5,.4,1) forwards; }
+@keyframes c3Stamp { 0% { opacity: 0; transform: rotate(-12deg) scale(2.2); } 60% { opacity: 1; transform: rotate(-2deg) scale(.93); } 100% { opacity: 1; transform: rotate(-3deg) scale(1); } }
+/* "Mamá" tachada con dos trazos finos (mismo estilo que el capítulo 2) */
+.c3 .mama { position: relative; display: inline-block; }
+.c3 .scribble { position: absolute; left: -7%; right: -7%; top: -8%; bottom: -12%; width: 114%; height: 120%; overflow: visible; }
+.c3 .scribble path { fill: none; stroke: var(--noche); stroke-width: 2; stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.c3.f-scribble .scribble path { animation: c3Scribble .4s ease-out forwards; }
+@keyframes c3Scribble { to { stroke-dashoffset: 0; } }
+.c3 .c3-map { width: min(270px, calc(100% - 60px)); padding: 14px 16px 14px; text-align: center; opacity: 0; transform: translateY(20px) rotate(2deg); }
+.c3-map svg { display: block; width: 100%; height: auto; }
+.c3-map span { font-family: var(--font-body, var(--font-letter)); font-size: 19px; }
+.c3.f-map .c3-map { animation: c3MapIn .6s cubic-bezier(.2,1.2,.4,1) forwards; }
+@keyframes c3MapIn { to { opacity: 1; transform: rotate(1deg); } }
+@media (prefers-reduced-motion: reduce) { .c3 .scribble path { stroke-dashoffset: 0; } }
+/* ===== fin capítulo 3 ===== */
+
+/* =====================================================================
+   CAPÍTULO 4 — LA GRANJA DE MAMÁ (c4-farm.js, farm/farm.js, farm/order.js) · arte v3: granja isométrica cálida y mullida
+   Este capítulo rompe a propósito con el linograbado: volumen suave (degradados permitidos), contornos finos #3A2A1A al 60 %.
+   Se juega en APAISADO (mundo de diseño 812×375); en vertical hay una compuerta de giro y una alternativa vertical (375×812).
+   .c4-world se escala por JS (--s) y se centra (--ox/--oy); el fondo SVG vive dentro del mundo.
+   Objetivos táctiles ≥ 72 px en vertical y ≥ 64 px en apaisado (a escala 1).
+   ===================================================================== */
+#stage.stage--wide { width: 100vw; }  /* sin letterbox 9:16 mientras dura la granja apaisada */
+.c4 { container-type: size; background: linear-gradient(#8FD3F4 0 22%, #6BAF2E 22%); }
+.c4 button { position: absolute; background: none; border: 0; padding: 0; color: inherit; }
+.c4-world { position: absolute; left: 0; top: 0; transform-origin: 0 0; width: var(--dw, 375px); height: var(--dh, 812px); transform: translate(var(--ox, 0px), var(--oy, 0px)) scale(var(--s, 1)); }
+.c4-bgwrap { position: absolute; inset: 0; }
+.c4-bgsvg { display: block; width: 100%; height: 100%; }
+.c4-bulb { animation: c4Twinkle 2.4s ease-in-out infinite; }
+.c4-bulb:nth-child(2n) { animation-delay: .7s; } .c4-bulb:nth-child(3n) { animation-delay: 1.4s; }
+@keyframes c4Twinkle { 50% { opacity: .55; } }
+.c4-deco { position: absolute; inset: 0; pointer-events: none; }
+.c4-deco > * { position: absolute; }
+.c4-deco svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.c4-chick { z-index: 2; transition: left .55s cubic-bezier(.3,.8,.4,1); animation: c4Idle 2.4s ease-in-out infinite; transform-origin: 50% 100%; }
+.c4-chick.c4-hop svg { animation: c4Hop .55s cubic-bezier(.3,.8,.4,1); }
+@keyframes c4Idle { 0%, 80%, 100% { transform: none; } 88% { transform: translateY(-5px); } }
+@keyframes c4Hop { 40% { transform: translateY(-16px) scale(1.06, .94); } 100% { transform: none; } }
+
+/* ----- posiciones: APAISADO (mundo 812×375) ----- */
+.is-land { --y0: 0px; }
+.is-land .c4-barn { left: 84px; top: 22px; width: 150px; height: 141px; }
+.is-land .c4-coop { left: 410px; top: 60px; width: 116px; height: 90px; }
+.is-land .c4-pots { left: 236px; top: 98px; width: 58px; height: 40px; }
+.is-land .c4-sign { left: 298px; top: 92px; width: 54px; height: 44px; }
+.is-land .c4-chick { top: 114px; width: 34px; height: 34px; }
+.is-land .c4-play { top: 0; height: 375px; }
+.is-land .c4-plot-0 { left: 140px; } .is-land .c4-plot-1 { left: 232px; } .is-land .c4-plot-2 { left: 324px; }
+.is-land .c4-plot { top: 126px; }
+.is-land .c4-hen { left: 420px; top: 124px; }
+.is-land .c4-egg { left: 512px; top: 138px; }
+.is-land .c4-plate { left: 560px; top: 134px; }
+.is-land .c4-wok { left: 330px; top: 214px; }
+.is-land .c4-sleigh { left: 580px; top: 204px; }
+.is-land .c4-deliver { left: 596px; top: 248px; }
+.is-land .c4-mom { left: 20px; top: 188px; width: 104px; height: 128px; }
+.is-land .c4-bubble { left: 110px; top: 138px; width: 270px; }
+.is-land .c4-order { right: 8px; top: 58px; }
+
+/* ----- posiciones: VERTICAL (alternativa, mundo 375×812) ----- */
+.is-port { --y0: 268px; }
+.is-port .c4-barn { left: 56px; top: 112px; width: 150px; height: 141px; }
+.is-port .c4-coop { display: none; }
+.is-port .c4-pots { left: 200px; top: 236px; width: 70px; height: 48px; }
+.is-port .c4-sign { left: 296px; top: 232px; width: 64px; height: 52px; }
+.is-port .c4-chick { top: 252px; width: 36px; height: 36px; }
+.is-port .c4-play { top: var(--y0); height: 340px; }
+.is-port .c4-plot-0 { left: 12px; } .is-port .c4-plot-1 { left: 102px; } .is-port .c4-plot-2 { left: 192px; }
+.is-port .c4-plot { top: 8px; }
+.is-port .c4-hen { left: 116px; top: 112px; }
+.is-port .c4-egg { left: 204px; top: 126px; }
+.is-port .c4-plate { left: 290px; top: 22px; }
+.is-port .c4-wok { left: 272px; top: 108px; }
+.is-port .c4-sleigh { left: 112px; top: 200px; }
+.is-port .c4-deliver { left: 130px; top: 262px; }
+.is-port .c4-mom { left: 16px; bottom: 8px; width: 100px; height: 27cqh; }
+.is-port .c4-bubble { left: 14px; top: 40px; width: 250px; }
+.is-port .c4-order { right: 8px; top: calc(var(--safe-t) + 64px); }
+
+/* ----- cartel de pedidos: tablón de madera clavado ----- */
+.c4-order {
+  position: absolute; width: 188px; z-index: 8; padding: 14px 10px 14px 12px; color: #FFF6E0; transform: rotate(1deg);
+  background: linear-gradient(#CC9158, #9C6636); border: 2px solid rgba(58,42,26,.65); border-radius: 10px;
+  box-shadow: 0 5px 0 rgba(58,42,26,.4), 0 8px 12px rgba(20,40,10,.25), inset 0 2px 0 rgba(255,235,200,.35);
+}
+.c4-order .c4-seam { position: absolute; left: 0; right: 0; height: 2px; background: rgba(58,42,26,.4); }
+.c4-order .c4-seam:nth-of-type(1) { top: 33%; } .c4-order .c4-seam:nth-of-type(2) { top: 66%; }
+.c4-order .c4-nail { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #A8A29A); border: 1px solid rgba(58,42,26,.7); }
+.c4-nail:nth-of-type(3) { left: 6px; top: 6px; } .c4-nail:nth-of-type(4) { right: 6px; top: 6px; }
+.c4-nail:nth-of-type(5) { left: 6px; bottom: 6px; } .c4-nail:nth-of-type(6) { right: 6px; bottom: 6px; }
+.c4-pin { display: none; }
+.c4-order h3 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); margin: 0; }
+.c4-order ul { position: relative; list-style: none; margin: 0; padding: 0; }
+.c4-order li { display: flex; align-items: center; gap: 8px; min-height: 26px; font-family: var(--font-ui); font-weight: 800; font-size: 15px; white-space: nowrap; text-shadow: 0 1px 0 rgba(58,42,26,.55); }
+.c4-box { flex: none; width: 22px; height: 22px; border: 2px solid rgba(58,42,26,.7); border-radius: 6px; background: #FFF6E0; display: grid; place-items: center; box-shadow: inset 0 2px 0 rgba(58,42,26,.15); }
+.c4-box svg { width: 18px; height: 18px; fill: none; stroke: #3E8E2A; stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 26; stroke-dashoffset: 26; transition: stroke-dashoffset .3s ease-out; }
+.c4-order li.on .c4-box { background: #E8F7C8; }
+.c4-order li.on .c4-box svg { stroke-dashoffset: 0; }
+.c4-order li.on .c4-lbl { text-decoration: line-through; text-decoration-thickness: 2px; opacity: .75; }
+.c4-order li.pop .c4-box { animation: c4Pop .4s cubic-bezier(.3,1.6,.5,1); }
+.c4-sig { position: relative; margin: 4px 0 0; font-family: 'Segoe Script','Bradley Hand','Snell Roundhand','Comic Sans MS',cursive; font-size: 12px; line-height: 1.15; text-align: right; color: #FFF0CF; text-shadow: 0 1px 0 rgba(58,42,26,.5); }
+.c4-sig small { display: block; font-size: 12px; opacity: .9; }
+@keyframes c4Pop { 40% { transform: scale(1.3); } 100% { transform: none; } }
+
+/* ----- modo 3D real (farm3d.js): el lienzo three.js va debajo; los botones DOM quedan como capa accesible y Entregar ----- */
+.c4-gl { z-index: 0; }
+.c4.c4-3d .c4-bgwrap, .c4.c4-3d .c4-deco, .c4.c4-3d .c4-play { display: none; }
+.c4.c4-3d .c4-world { pointer-events: none; }
+.c4-hits { position: absolute; inset: 0; z-index: 5; pointer-events: none; display: none; }
+.c4.c4-3d .c4-hits { display: block; }
+.c4-hits .c4-t { pointer-events: none; opacity: 1 !important; filter: none !important; border-radius: 16px; }
+.c4-hits .c4-t:not(.c4-deliver) > span:not(.c4-bar) { display: none; }
+.c4-hits .c4-t:not(.c4-deliver)::before { display: none; }
+.c4-hits .c4-wok .c4-bar { left: 8px; right: 8px; bottom: auto; top: -12px; }
+.c4-hits .c4-deliver { pointer-events: auto; }
+.c4-hits .c4-deliver[hidden], .c4-hits .c4-bubble[hidden], .c4-hits .c4-egg[hidden], .c4-hits .c4-plate[hidden] { display: none; }
+.c4-hits .c4-bubble { position: absolute; }
+
+/* ----- zona jugable ----- */
+.c4-play { position: absolute; left: 0; right: 0; z-index: 3; pointer-events: none; }
+.c4-play > * { pointer-events: auto; }
+.c4-t { transition: opacity .3s, filter .3s; -webkit-tap-highlight-color: transparent; }
+.c4-t:focus-visible { outline: 3px solid #FFD25A; outline-offset: 4px; border-radius: 14px; }
+.c4-t > span { display: block; }
+.c4-t svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.c4-t.is-off { opacity: .5; filter: saturate(.55); }
+/* halo ámbar que pulsa cada 1,2 s sobre el siguiente objetivo */
+.c4-t::before { content: ''; position: absolute; inset: -8px; z-index: -1; border-radius: 22px; opacity: 0; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255,210,90,.75), rgba(242,180,90,.35) 72%, rgba(242,180,90,0)); border: 3px solid rgba(255,214,110,.95); }
+.c4-t.is-next::before { opacity: 1; animation: c4Halo 1.2s ease-in-out infinite; }
+@keyframes c4Halo { 0%, 100% { opacity: .5; transform: scale(.95); } 50% { opacity: 1; transform: scale(1.07); } }
+.c4-t.c4-wig { animation: c4Wig .45s ease-in-out; }
+@keyframes c4Wig { 20% { transform: rotate(-4deg); } 45% { transform: rotate(4deg); } 70% { transform: rotate(-2deg); } }
+
+/* parcelas: campos arados en rombo; la planta hace squash-and-stretch al cosechar y el bloque rebota */
+.c4-plot { width: 90px; height: 88px; }
+.c4-soil { position: absolute; left: 0; right: 0; bottom: 0; height: 62px; z-index: 1; }
+.c4-veg { position: absolute; left: 17px; bottom: 22px; width: 56px; height: 56px; transform-origin: 50% 100%; z-index: 2; transition: transform .35s cubic-bezier(.5,-.4,.7,.2), opacity .3s .1s; }
+.c4-plot.harvested .c4-veg { transform: scale(.1) translateY(24px); opacity: 0; }
+.c4-plot.c4-pick .c4-veg { animation: c4Squash .4s cubic-bezier(.3,1.4,.5,1); }
+@keyframes c4Squash { 0% { transform: none; } 30% { transform: scale(1.25, .78); } 65% { transform: scale(.88, 1.2) translateY(-8px); } 100% { transform: none; } }
+.c4-plot:not(.harvested):not(.is-off) .c4-veg { animation: c4Sway 2.8s ease-in-out infinite; }
+@keyframes c4Sway { 50% { transform: rotate(2.5deg); } }
+
+/* gallina y huevo */
+.c4-hen { width: 88px; height: 92px; }
+.c4-hen-art { width: 88px; height: 92px; transform-origin: 50% 100%; animation: c4Idle 3s ease-in-out infinite; }
+.c4-hen.c4-peck .c4-hen-art { animation: c4Peck .9s ease-in-out; }
+@keyframes c4Peck { 15%, 45%, 75% { transform: rotate(-9deg) translateY(4px); } 30%, 60% { transform: rotate(3deg); } }
+.c4-egg { width: 72px; height: 80px; }
+.c4-egg[hidden], .c4-plate[hidden], .c4-deliver[hidden], .c4-bubble[hidden], .c4-gate[hidden] { display: none; }
+.c4-egg-art { width: 58px; height: 68px; margin: 6px auto; }
+.c4-appear { animation: c4Appear .5s cubic-bezier(.3,1.7,.5,1); }
+@keyframes c4Appear { from { transform: scale(.2) translateY(-20px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* wok sobre su estufita */
+.c4-wok { width: 100px; height: 92px; }
+.c4-wok-art { width: 100px; height: 91px; }
+.c4-flames { opacity: 0; transform-box: fill-box; transform-origin: 50% 100%; }
+.c4-wok.cooking .c4-flames { opacity: 1; animation: c4Fire .3s ease-in-out infinite alternate; }
+@keyframes c4Fire { to { transform: scaleY(.82) scaleX(1.1); } }
+.c4-steam { position: absolute; left: 22px; right: 22px; top: 6px; height: 30px; opacity: 0; pointer-events: none; }
+.c4-wok.cooking .c4-steam, .c4-plate .c4-steam { opacity: 1; }
+.c4-steam i { position: absolute; bottom: 0; width: 15px; height: 15px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff, rgba(255,255,255,.55)); filter: blur(.8px); animation: c4Steam 1.5s ease-out infinite; }
+.c4-steam i:nth-child(1) { left: 2px; } .c4-steam i:nth-child(2) { left: 28px; animation-delay: .5s; } .c4-steam i:nth-child(3) { left: 50px; animation-delay: 1s; }
+.c4-steam.sm { left: 20px; top: -6px; }
+@keyframes c4Steam { 0% { transform: translateY(8px) scale(.5); opacity: 0; } 30% { opacity: .95; } 100% { transform: translateY(-34px) scale(1.5); opacity: 0; } }
+.c4-smell { position: absolute; left: 30px; top: -28px; width: 44px; height: 32px; opacity: 0; pointer-events: none; }
+.c4-wok.cooking .c4-smell { animation: c4Smell 1s ease-in-out infinite; }
+@keyframes c4Smell { 0% { opacity: 0; transform: translateY(10px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(-12px); } }
+.c4-bar { position: absolute; left: 4px; right: 4px; bottom: -6px; height: 15px; border-radius: 8px; background: rgba(255,250,235,.92); border: 2px solid rgba(58,42,26,.6); overflow: hidden; box-shadow: 0 2px 0 rgba(58,42,26,.3); }
+.c4-bar[hidden] { display: none; }
+.c4-bar b { display: block; height: 100%; width: 0; background: linear-gradient(#FFD25A, #F2A93B); border-radius: 6px; }
+.c4-plate { width: 80px; height: 74px; }
+.c4-plate-art { width: 80px; height: 62px; margin-top: 8px; }
+
+/* mamá (chibi 3D en vista isométrica): contorno suave de 1 px y sombra redonda y blanda en vez de la tinta */
+.c4-mom { position: absolute; pointer-events: none; z-index: 5; }
+.c4 .c4-mom .chibi-shadow { position: absolute; left: -6px; right: -6px; bottom: -8px; top: auto; width: auto; height: 20px; border-radius: 50%; opacity: 1; background: radial-gradient(closest-side, rgba(20,50,10,.4), rgba(20,50,10,0)); -webkit-mask-image: none; mask-image: none; }
+.c4 .c4-mom .chibi-shadow::before, .c4 .c4-mom .chibi-shadow::after { display: none; }
+.c4 .c4-mom .chibi-tint { display: none; }
+.c4 .c4-mom .c4-mom-img.chibi { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; transform-origin: 50% 100%; animation: c4Breathe 3.2s ease-in-out infinite; filter: drop-shadow(0 0 1px rgba(58,42,26,.85)) drop-shadow(0 3px 2px rgba(20,50,10,.2)); }
+@keyframes c4Breathe { 50% { transform: scaleY(1.012); } }
+.c4 .c4-mom-img.c4-happy { animation: c4Happy .55s cubic-bezier(.3,1.2,.5,1); }
+@keyframes c4Happy { 0% { transform: none; } 25% { transform: scale(1.05, .94); } 55% { transform: translateY(-14px) scale(.98, 1.04); } 100% { transform: none; } }
+
+/* trineo-camión de pedidos + botón Entregar */
+.c4-sleigh { width: 200px; height: 126px; }
+.c4-sleigh-art { width: 200px; height: 126px; transform-origin: 30% 100%; }
+.c4-sleigh-lbl { position: absolute; left: 50%; bottom: -2px; transform: translateX(-50%); white-space: nowrap; padding: 2px 10px; border-radius: 8px; border: 1.5px solid rgba(58,42,26,.65); background: linear-gradient(#E3B67C, #C48F54); color: #4A2D12; font-weight: 800; font-size: 12px; box-shadow: 0 2px 0 rgba(58,42,26,.35); }
+.c4-cargo { opacity: 0; transform: translateY(-18px); transition: opacity .3s, transform .4s cubic-bezier(.3,1.5,.5,1); }
+.c4-sleigh.loaded .c4-cargo { opacity: 1; transform: none; }
+.c4-sleigh.loaded.c4-load .c4-sleigh-art { animation: c4Happy .55s; }
+.c4-sleigh.takeoff .c4-sleigh-art { animation: c4Takeoff 1.5s cubic-bezier(.5,0,.8,.6) forwards; }
+@keyframes c4Takeoff { 0% { transform: none; opacity: 1; } 18% { transform: translateY(6px) rotate(3deg); } 100% { transform: translate(260px, -300px) rotate(-16deg) scale(.45); opacity: 0; } }
+.c4-sleigh.loaded .c4-sleigh-lbl, .c4-sleigh.takeoff .c4-sleigh-lbl { opacity: 0; transition: opacity .2s; }
+.c4-sleigh.gone .c4-sleigh-art, .c4-sleigh.gone .c4-sleigh-lbl { display: none; }
+.c4 .c4-deliver { width: 176px; min-width: 0; height: 68px; border: 2px solid rgba(58,42,26,.7); border-radius: 14px; background: linear-gradient(#F0634A, #C0392B); color: #FFF8EE; font-family: var(--font-ui); font-weight: 800; font-size: 22px; letter-spacing: .05em; text-shadow: 0 1px 0 rgba(58,42,26,.55); box-shadow: 0 5px 0 #8A2A1A, 0 8px 10px rgba(20,40,10,.3); animation: c4Appear .45s cubic-bezier(.3,1.6,.5,1); z-index: 4; }
+.c4.is-port .c4-deliver { width: 190px; height: 72px; }
+.c4-deliver::before { border-radius: 20px; }
+.c4 .c4-deliver:active { transform: translateY(5px); box-shadow: 0 0 0 #8A2A1A; }
+
+/* bocadillo de mamá */
+.c4-bubble { position: absolute; z-index: 6; padding: 12px 16px; border: 2px solid rgba(58,42,26,.65); border-radius: 18px; background: #FFFDF6; color: #3A2A1A;
+  font-family: var(--font-ui); font-weight: 800; font-size: 21px; line-height: 1.25; box-shadow: 0 4px 0 rgba(58,42,26,.35), 0 8px 14px rgba(20,40,10,.25); }
+.c4-bubble::after { content: ''; position: absolute; left: 30px; bottom: -13px; width: 18px; height: 18px; background: #FFFDF6; border-right: 2px solid rgba(58,42,26,.65); border-bottom: 2px solid rgba(58,42,26,.65); transform: rotate(45deg) translate(-6px, -6px); }
+.c4-bubble.c4-say { animation: c4Say .4s cubic-bezier(.3,1.5,.5,1); }
+@keyframes c4Say { from { transform: scale(.4); opacity: 0; transform-origin: 10% 100%; } to { transform: none; opacity: 1; } }
+
+/* partículas, objetos voladores y lluvia de dijes (viven en la página del capítulo) */
+.c4-puff, .c4-fly, .c4-charm { position: absolute; z-index: 30; pointer-events: none; }
+.c4-puff svg, .c4-fly svg, .c4-charm svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.c4-fly { width: 48px; height: 48px; filter: drop-shadow(0 3px 3px rgba(20,40,10,.3)); }
+.c4-charm { width: 32px; height: 32px; }
+
+/* escenas de novela visual (antes y después de la granja): se ve el paisaje sin los elementos de juego */
+.c4.c4-vn .c4-deco, .c4.c4-vn .c4-play, .c4.c4-vn .c4-order { display: none; }
+
+/* compuerta de giro: pantalla amistosa cuando el teléfono está en vertical */
+.c4-gate { position: absolute; inset: 0; z-index: 40; display: grid; place-items: center; padding: 24px; text-align: center; background: #8DC63F; }
+.c4-gate-in { display: flex; flex-direction: column; align-items: center; gap: 18px; max-width: 320px; }
+.c4-phone { width: 96px; height: 128px; filter: drop-shadow(0 6px 4px rgba(20,50,10,.3)); transform-origin: 50% 55%; animation: c4Turn 2.6s ease-in-out infinite; }
+@keyframes c4Turn { 0%, 15% { transform: rotate(0); } 55%, 85% { transform: rotate(-90deg); } 100% { transform: rotate(0); } }
+.c4-gate-t { margin: 0; font-family: var(--font-ui); font-weight: 800; font-size: 22px; line-height: 1.3; color: #213510; text-shadow: 0 1px 0 rgba(255,255,255,.45); }
+.c4-gate-link { position: static !important; min-height: 48px; padding: 6px 14px; font-family: var(--font-ui); font-weight: 800; font-size: 16px; color: #213510; text-decoration: underline; text-underline-offset: 3px; background: none; border: 0; }
+#stage.c4-gating #dock { visibility: hidden; }
+
+/* apaisado: el dock se compacta (diálogo abajo a la izquierda, CONTINUAR abajo a la derecha) */
+#stage.stage--wide #dock { flex-direction: row; align-items: flex-end; gap: 12px; padding: 0 calc(var(--safe-r) + 14px) 10px calc(var(--safe-l) + 14px); }
+#stage.stage--wide #back-btn { order: -1; align-self: flex-end; margin: 0 0 6px 0; }
+#stage.stage--wide #narration { flex: 0 1 48%; min-height: 0; padding: 8px 24px 8px 14px; font-size: 17px; line-height: 1.3; }
+#stage.stage--wide #next-btn { width: 230px; min-width: 0; margin: 0 0 6px auto; }
+#stage.stage--wide #skip-btn { order: 3; }
+#stage:has(.c4:not(.turn-out)) #back-btn { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .c4-t.is-next::before { animation: none; opacity: 1; } .c4-plot:not(.harvested) .c4-veg, .c4-chick, .c4-hen-art, .c4 .c4-mom-img.chibi, .c4-bulb, .c4-phone { animation: none; }
+}
+/* ===== fin capítulo 4 ===== */
+
+/* =====================================================================
+   CAPÍTULO 6 — LA PETICIÓN OFICIAL (c6-request.js) · A1 v2: la casa del cap. 1, cálida
+   ===================================================================== */
+.c6 { container-type: size; background: #2A1B3D; }
+.c6-art { position: absolute; left: 50%; top: 0; height: 100%; aspect-ratio: 9 / 16; transform: translateX(-50%); }
+.c6-art > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.c6-art > .c6-table { z-index: 3; }
+.c6-art .layer { transform: translate(calc(var(--px) * var(--d, 0) * 1px), calc(var(--py) * var(--d, 0) * .5px)); transition: transform .25s ease-out; }
+.c6 .bulb { animation: c6Tw 2.6s steps(1) infinite; animation-delay: calc(var(--i) * -.45s); }
+@keyframes c6Tw { 50% { opacity: .35; } }
+.c6 .steam path { animation: c6Steam 3s steps(6) infinite; } .c6 .steam path:nth-child(2) { animation-delay: -1s; }
+@keyframes c6Steam { 0%,100% { opacity: .25; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-5px); } }
+.c6 .smoke { animation: c6Smoke 5s steps(10) infinite; }
+@keyframes c6Smoke { 50% { transform: translateY(-5px); opacity: .7; } }
+
+/* --- personajes (.chibi) sobre la nieve, con .chibi-shadow --- */
+.c6-chars { position: absolute; left: calc(64% - 42px); bottom: calc(27.5% - 40px); transform: translateX(-50%); height: min(33cqh, 285px); aspect-ratio: 967 / 897; max-width: calc(100cqw - 98px); z-index: 2; pointer-events: none; transition: transform .6s cubic-bezier(.3,.8,.3,1), bottom .5s, height .5s; }
+.c6[data-mode="choice"] .c6-chars, .c6[data-mode="accepted"] .c6-chars, .c6[data-mode="thinking"] .c6-chars { bottom: 27.5%; height: min(31cqh, 270px); }
+.c6-bob { position: relative; height: 100%; animation: c6Bob 3.4s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes c6Bob { 50% { transform: translateY(-3px) scaleY(1.01); } }
+.c6-chars img, .c6-chars .c6-fallback { display: block; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; }
+.c6-chars .chibi-shadow { left: 52%; bottom: -1%; width: 78%; }
+.c6[data-beat="1"] .c6-chars { transform: translateX(-50%) rotate(2deg) scale(1.02); }
+.c6[data-mode="accepted"] .c6-bob, .c6[data-mode="thinking"] .c6-bob { animation: c6Happy 1.6s steps(8) infinite; }
+@keyframes c6Happy { 0%,100% { transform: none; } 30% { transform: translateY(-12px) scale(1.02); } 55% { transform: none; } 75% { transform: translateY(-5px); } }
+
+/* --- carta: pergamino de borde rasgado (se oculta mientras no hay texto) --- */
+.c6:not(.has-text) .c6-letter { opacity: 0; }
+.c6-letter { position: absolute; left: 50%; top: calc(var(--safe-t) + 92px); width: min(331px, calc(100% - 40px)); min-height: 150px; transform: translateX(-50%); z-index: 3;
+  padding: 22px 24px 20px; display: flex; flex-direction: column; justify-content: center; clip-path: inset(0 0 100% 0); animation: c6Unroll 1.1s cubic-bezier(.3,.7,.2,1) .2s forwards; transition: opacity .35s; }
+@keyframes c6Unroll { to { clip-path: inset(-8px -8px -30px -8px); } }
+.c6-text { position: relative; z-index: 1; font-family: var(--font-body); font-size: 19px; line-height: 1.4; color: var(--ink); text-align: left; opacity: 0; }
+.c6-text p { margin: 0; } .c6-text p + p { margin-top: 8px; }
+.c6-text.in { animation: c6TextIn .6s ease-out forwards; }
+@keyframes c6TextIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.c6-text .approved { font-family: var(--font-title-gothic); font-size: 28px; line-height: 1.05; color: #9C1F2B; text-align: center; border: 4px double #9C1F2B; padding: 6px 10px 8px; transform: rotate(-3deg); mix-blend-mode: multiply; animation: c6Stamp .3s steps(4) both; }
+@keyframes c6Stamp { 0% { opacity: 0; transform: rotate(-12deg) scale(2.2); } 100% { opacity: 1; transform: rotate(-3deg) scale(1); } }
+.c6-text .thanks { font-style: italic; text-align: center; margin-top: 12px; }
+
+/* --- botones propios del capítulo (usan .btn globales; reemplazan a CONTINUAR) --- */
+.c6-choice, .c6-after { position: absolute; left: calc(var(--safe-l) + 14px); right: calc(var(--safe-r) + 14px); bottom: calc(var(--safe-b) + 72px); z-index: 21; display: none; flex-direction: column; gap: 14px; }
+.c6[data-mode="choice"] .c6-choice, .c6[data-mode="accepted"] .c6-after, .c6[data-mode="thinking"] .c6-after { display: flex; animation: c6TextIn .5s ease-out .3s both; }
+.c6-choice .btn, .c6-after .btn { width: 100%; }
+/* en los finales la caja de diálogo ocupa la parte baja: los botones van justo encima */
+.c6[data-mode="accepted"] .c6-after, .c6[data-mode="thinking"] .c6-after { bottom: calc(var(--safe-b) + 176px); }
+.c6-after .btn--ghost { min-height: 48px; font-size: 16px; }
+.c6[data-mode="folder"] .c6-letter, .c6[data-mode="coupon"] .c6-letter, .c6.c6-cg .c6-letter { opacity: 0; }
+
+/* --- carpeta enorme y anexos (visible solo en modo carpeta) --- */
+.c6-folder { position: absolute; left: 50%; bottom: calc(var(--safe-b) + 80px); width: min(340px, 92%); transform: translate(-50%, 130%) rotate(5deg); z-index: 5; pointer-events: none; visibility: hidden; transition: transform .8s cubic-bezier(.2,.9,.3,1.1), visibility 0s linear .8s; }
+.c6-folder svg { display: block; width: 100%; height: auto; overflow: visible; }
+.c6[data-mode="folder"] .c6-folder { transform: translate(-50%, 0) rotate(-2deg); visibility: visible; transition-delay: 0s; }
+.c6-card { position: absolute; left: 50%; top: 13cqh; width: min(312px, calc(100% - 40px)); margin-left: calc(min(312px, 100% - 40px) / -2); z-index: 8; border: 0; background: none; padding: 26px 22px 16px; text-align: left; color: var(--ink);
+  display: flex; flex-direction: column; gap: 8px; font-family: var(--font-body); }
+.c6-card[hidden] { display: none; }
+.c6-card.in { animation: c6CardIn .3s steps(5) both; } .c6-card.out { animation: c6CardOut .25s steps(4) forwards; }
+@keyframes c6CardIn { from { opacity: 0; transform: translateY(40px) scale(.7) rotate(-4deg); } to { opacity: 1; transform: none; } }
+@keyframes c6CardOut { to { opacity: 0; transform: translateY(40px) scale(.85); } }
+.c6-num { font: 800 11px/1 var(--font-ui); letter-spacing: .1em; text-transform: uppercase; color: #9C1F2B; }
+.c6-ttl { font-family: var(--font-title-gothic); font-size: 28px; line-height: 1.05; }
+.c6-body, .c6-body p { font-family: var(--font-body); font-size: 19px; line-height: 1.35; margin: 0; }
+.c6-body small { display: block; margin-top: 6px; font: 800 12px var(--font-ui); color: var(--ink); text-align: center; }
+.c6-hint { align-self: flex-end; font: 800 13px var(--font-ui); color: #9C1F2B; letter-spacing: .04em; }
+.c6-chart { display: flex; align-items: flex-end; gap: 8px; height: 110px; padding: 0 6px; border-bottom: 3px solid var(--ink); border-left: 3px solid var(--ink); }
+.c6-chart span { flex: 1; height: var(--h); background: #9C1F2B; border: 2.5px solid var(--ink); border-bottom: 0; transform-origin: bottom; animation: c6Bar .4s steps(5) both; animation-delay: calc(.3s + var(--i) * .12s); }
+.c6-chart span:nth-child(even) { background: #F2C230; }
+@keyframes c6Bar { from { transform: scaleY(0); } }
+.c6-chick { display: flex; align-items: center; gap: 12px; }
+
+/* --- confeti (solo Oro, Baya y Ámbar; cuadraditos con borde de tinta) --- */
+.c6-confetti { position: absolute; inset: 0; z-index: 10; pointer-events: none; overflow: hidden; }
+.c6-confetti span { position: absolute; top: -20px; border: 1.5px solid var(--ink); opacity: 0; animation-name: c6Fall; animation-timing-function: ease-in; animation-fill-mode: forwards; }
+@keyframes c6Fall { 0% { opacity: 1; transform: translate(0, 0) rotate(0); } 100% { opacity: .9; transform: translate(var(--dx), 105cqh) rotate(var(--r)); } }
+
+/* --- vale navideño: capa modal a pantalla completa, por encima de la barra superior --- */
+.c6-coupon { position: absolute; inset: 0; z-index: 45; background: rgba(20,16,31,.88); display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: calc(var(--safe-t) + 10px) 12px calc(var(--safe-b) + 14px); }
+.c6-coupon[hidden] { display: none; }
+.c6-coupon.in .c6-canvas { animation: c6CardIn .3s steps(5) both; }
+.c6-canvas { flex: 1 1 0; min-height: 0; width: 100%; max-width: 360px; object-fit: contain; }
+.c6-coupon-btns { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 360px; flex: none; padding-bottom: 5px; }
+.c6-coupon .btn { width: 100%; min-height: 52px; }
+@container (max-height: 700px) { .c6-chars { bottom: 31%; height: 24cqh; } .c6-choice .btn, .c6-after .btn { min-height: 52px; } .c6-choice, .c6-after { bottom: calc(var(--safe-b) + 64px); gap: 12px; } .c6-text { font-size: 16.5px; line-height: 1.38; } .c6-letter { padding: 16px 20px 14px; top: calc(var(--safe-t) + 104px); } .c6-card { top: 17cqh; padding-top: 22px; } .c6-ttl { font-size: 24px; } .c6-body, .c6-body p { font-size: 17px; } .c6-chart { height: 80px; } }
+@media (prefers-reduced-motion: reduce) { .c6-letter { clip-path: none; } .c6-text { opacity: 1; } .c6-confetti { display: none; } }
+/* ===== fin capítulo 6 ===== */
+
+/* =====================================================================
+   CAPÍTULO 5 — EL OBJETO LEGENDARIO (c5-legendary.js, three/legendary.js)
+   Paleta: #0E1A14 #1F4D3A #C9A227 #F4E7B0 + tinta #1B1420. Colores planos, sin degradados.
+   ===================================================================== */
+.c5 { container-type: size; background: #0E1A14; --c5-ink: #1B1420; }
+.c5 > .c5-host, .c5 > .c5-charms { position: absolute; inset: 0; }
+.c5-host { z-index: 2; pointer-events: none; }
+/* penumbra plana: oscuro al empezar, se aclara al abrir el cofre */
+.c5::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: #0E1A14; opacity: 0; transition: opacity 1s steps(5, end); }
+.c5.dim-in::after { opacity: .62; }
+.c5.lit::after { opacity: .2; transition-duration: 1.4s; }
+.c5.instant::after { transition: none; }
+.c5-embers rect { animation: c5Ember 2.6s steps(4, end) infinite; }
+.c5-embers rect:nth-child(2n) { animation-delay: -1.1s; } .c5-embers rect:nth-child(3n) { animation-delay: -1.9s; }
+@keyframes c5Ember { 0% { opacity: 0; transform: translateY(8px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(-26px); } }
+.c5-flame { transform-box: fill-box; }
+.c5-flame path:nth-of-type(2), .c5-flame path:nth-of-type(3) { transform-box: fill-box; transform-origin: 50% 100%; animation: c5Flame .5s steps(2, end) infinite alternate; }
+@keyframes c5Flame { to { transform: scale(.88, 1.1); } }
+
+/* rayos planos girando detrás del objeto */
+.c5-rays-wrap { position: absolute; z-index: 1; left: var(--c5-cx, 50%); top: calc(var(--c5-frame-top, 200px) + var(--c5-frame, 180px) / 2); width: var(--c5-ray, 400px); height: var(--c5-ray, 400px);
+  transform: translate(-50%, -50%); pointer-events: none; opacity: 0; }
+.c5-rays { width: 100%; height: 100%; animation: c5Spin 40s linear infinite; }
+.c5.item-on .c5-rays-wrap { opacity: .3; transition: opacity .6s steps(4, end); }
+.c5.instant .c5-rays-wrap { transition: none; }
+@keyframes c5Spin { to { transform: rotate(360deg); } }
+
+/* aventurero: se levanta sobre el cofre, de pie en el pedestal */
+.c5-actor { position: absolute; z-index: 3; left: var(--c5-cx, 50%); top: var(--c5-adv-top, 300px); height: var(--c5-adv-h, 200px); transform: translateX(-50%); opacity: 0; pointer-events: none; }
+.c5.adv-on .c5-actor { opacity: 1; }
+.c5-actor { rotate: -5deg; transform-origin: 50% 100%; animation: c5Bob 1.1s steps(3, end) infinite alternate; }
+.c5-adv { display: block; height: 100%; width: auto; }
+.c5-adv-shadow { bottom: -5px; width: 80%; height: 12px; }
+@keyframes c5Bob { to { translate: 0 -7px; } }
+
+/* marco de inventario con la consola: el aspecto lo da el .inv-frame global; aquí solo la posición */
+.c5-frame { position: absolute; z-index: 4; left: var(--c5-cx, 50%); top: var(--c5-frame-top, 120px); width: var(--c5-frame, 180px); height: var(--c5-frame, 180px); transform: translateX(-50%);
+  margin: 0; padding: 3px; opacity: 0; pointer-events: none; cursor: pointer; }
+.c5.item-on .c5-frame { opacity: 1; pointer-events: auto; animation: c5Lift .8s steps(5, end) both; }
+@keyframes c5Lift { from { opacity: 0; transform: translateX(-50%) translateY(110px) scale(.4); } 30% { opacity: 1; } to { opacity: 1; transform: translateX(-50%); } }
+.c5.instant .c5-frame { animation: none; }
+
+/* Pandoras volando al cofre */
+.c5-charms { z-index: 5; pointer-events: none; overflow: hidden; }
+.c5-charm { position: absolute; left: 0; top: 0; width: 32px; height: 32px; will-change: transform; }
+
+/* toque del cofre y pista (texto entintado, sin píldora) */
+.c5-tap { z-index: 6; position: absolute; transform: translate(-50%, -50%); width: 62%; height: 20cqh; background: none; border: 0; cursor: pointer; }
+.c5-tap[hidden] { display: none; }
+.c5-hint { z-index: 6; position: absolute; margin: 0; transform: translateX(-50%); white-space: nowrap; pointer-events: none; font: 400 22px var(--font-title-epic, Georgia, serif); color: #F4E7B0;
+  text-shadow: 2px 2px 0 var(--c5-ink), -2px -2px 0 var(--c5-ink), 2px -2px 0 var(--c5-ink), -2px 2px 0 var(--c5-ink); animation: c5Blink 1s steps(2, end) infinite; }
+.c5-hint[hidden] { display: none; }
+@keyframes c5Blink { 50% { opacity: .35; } }
+
+/* destello blanco de respaldo (si api.fx.whiteFlash no existe) */
+.c5-flash { position: absolute; inset: 0; z-index: 9; background: #fff; opacity: 0; pointer-events: none; }
+.c5-flash.go { animation: c5Flash .2s linear; }
+@keyframes c5Flash { 0% { opacity: 0; } 40% { opacity: 1; } 100% { opacity: 0; } }
+
+/* ---------- Versión 2D (sin WebGL) ---------- */
+.c5-fb { position: absolute; inset: 0; --g: 520px; --gx: 64%; }
+.c5-fb-ped { position: absolute; left: var(--gx, 50%); top: calc(var(--g) - 4px); width: 60%; height: 54px; transform: translateX(-50%); background: #34493d; border: 3px solid var(--c5-ink); box-shadow: inset 0 -6px 0 rgba(27,20,32,.35); }
+.c5-fb-chest { position: absolute; left: var(--gx, 50%); width: 44%; transform: translateX(-50%); bottom: calc(100% - var(--g) + 2px); overflow: visible; }
+.c5-fb-chest .lid-open, .c5-fb-chest .lid-mid { display: none; }
+.c5-fb-chest[data-step="1"] .lid-shut, .c5-fb-chest[data-step="2"] .lid-shut, .c5-fb-chest[data-step="3"] .lid-shut { display: none; }
+.c5-fb-chest[data-step="1"] .lid-mid, .c5-fb-chest[data-step="2"] .lid-mid { display: inline; }
+.c5-fb-chest[data-step="2"] .lid-mid { transform: translateY(-14px) scaleY(1.2); transform-box: fill-box; transform-origin: 50% 100%; }
+.c5-fb-chest[data-step="3"] .lid-open { display: inline; }
+.c5-fb-chest.pulse { animation: c5Pulse .45s steps(3, end); }
+@keyframes c5Pulse { 30% { transform: translateX(-50%) scale(1.06); filter: brightness(1.5); } }
+.c5-fb-sparks { position: absolute; inset: 0; opacity: 0; transition: opacity .6s steps(3, end); }
+.c5-fb.lit .c5-fb-sparks { opacity: 1; }
+.c5-fb-sparks b { position: absolute; left: var(--x); top: calc(var(--g) - 100px); width: 4px; height: 4px; background: #F4E7B0; animation: c5Spark 2.6s steps(8, end) infinite; animation-delay: var(--d); opacity: 0; }
+@keyframes c5Spark { 0% { opacity: 0; transform: translateY(0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(-190px); } }
+@media (prefers-reduced-motion: reduce) { .c5-actor, .c5-rays, .c5-fb-sparks b, .c5-embers rect { animation: none; } }
+/* ===== fin capítulo 5 ===== */
+
+/* 3D vertical: tarjeta del pedido compacta arriba a la derecha (no tapa el granero ni el gallinero) */
+.c4.c4-3d.is-port .c4-order { transform: scale(.6) rotate(1deg); transform-origin: 100% 0; }
+
+/* Si el teléfono sigue en horizontal en las escenas de novela del cap. 4: diálogo como franja inferior (≤ 28 % de alto),
+   sprites por encima de ella y HUD fuera de las cabezas. Solo apaisado + novela. */
+@media (orientation: landscape) {
+  #stage:has(.c4.c4-vn) #narration { max-height: 28%; overflow: auto; font-size: 13px; line-height: 1.25; padding: 6px 10px; }
+  #stage:has(.c4.c4-vn) #dock { gap: 4px; padding-bottom: 6px; }
+  #stage:has(.c4.c4-vn) #dock #back-btn, #stage:has(.c4.c4-vn) #dock #next-btn { min-height: 34px; height: 34px; font-size: 14px; padding-top: 0; padding-bottom: 0; }
+  #stage:has(.c4.c4-vn) .vn-stage { transform: translateY(-15%) scale(.62); transform-origin: 50% 100%; }
+  #stage:has(.c4.c4-vn) #hud-pandoras { top: 38px; left: 4px; transform: scale(.7); transform-origin: 0 0; }
+  #stage:has(.c4.c4-vn) #narration[data-speaker]::before { font-size: 11px; padding: 1px 6px; top: -16px; }
+}
+
+/* ajuste VN del capítulo 3 (verificación final): el sprite más bajo para no tapar el cofre 1 */
+.c3 .vn-sprite { --vn-h: 42%; }
